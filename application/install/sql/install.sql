@@ -271,6 +271,9 @@ CREATE TABLE `mac_collect` (
   `collect_appid` varchar(30) NOT NULL DEFAULT '' ,
   `collect_appkey` varchar(30) NOT NULL DEFAULT '' ,
   `collect_param` varchar(100) NOT NULL DEFAULT '' ,
+  `collect_filter` tinyint(1) unsigned NOT NULL DEFAULT '0' ,
+  `collect_filter_from` varchar(255) NOT NULL DEFAULT '' ,
+  `collect_opt` tinyint(1) unsigned NOT NULL DEFAULT '0' ,
   PRIMARY KEY (`collect_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 ;
 
@@ -749,6 +752,9 @@ CREATE TABLE `mac_vod` (
   `vod_down_server` varchar(255) NOT NULL DEFAULT '' ,
   `vod_down_note` varchar(255) NOT NULL DEFAULT '' ,
   `vod_down_url` mediumtext NOT NULL ,
+  `vod_plot` tinyint(1) unsigned NOT NULL DEFAULT '0' ,
+  `vod_plot_name` mediumtext NOT NULL ,
+  `vod_plot_detail` mediumtext NOT NULL ,
   PRIMARY KEY (`vod_id`),
   KEY `type_id` (`type_id`) USING BTREE,
   KEY `type_id_1` (`type_id_1`) USING BTREE,
@@ -768,6 +774,7 @@ CREATE TABLE `mac_vod` (
   KEY `vod_hits_day` (`vod_hits_day`) USING BTREE,
   KEY `vod_hits_week` (`vod_hits_week`) USING BTREE,
   KEY `vod_hits_month` (`vod_hits_month`) USING BTREE,
+  KEY `vod_plot` (`vod_plot`) USING BTREE,
   KEY `vod_points_play` (`vod_points_play`) USING BTREE,
   KEY `vod_points_down` (`vod_points_down`) USING BTREE,
   KEY `group_id` (`group_id`) USING BTREE,

@@ -8,6 +8,8 @@ class All extends Controller
     var $_ref;
     var $_cl;
     var $_ac;
+    var $_tsp;
+    var $_url;
 
     public function __construct()
     {
@@ -15,23 +17,29 @@ class All extends Controller
         $this->_ref = mac_get_refer();
         $this->_cl = request()->controller();
         $this->_ac = request()->action();
+        $this->_tsp = date('Ymd');
     }
 
-    protected function load_page_cache($tpl)
+    protected function load_page_cache($tpl,$type='html')
     {
         if(defined('ENTRANCE') && ENTRANCE == 'index' && $GLOBALS['config']['app']['cache_page'] ==1  && $GLOBALS['config']['app']['cache_time_page'] ) {
             $cach_name = MAC_MOB . '_'. $GLOBALS['config']['app']['cache_flag']. '_' .$tpl .'_'. http_build_query(mac_param_url());
             $res = Cache::get($cach_name);
             if ($res) {
+                if($type=='json'){
+                    $res = json_encode($res);
+                }
                 echo $res;
                 die;
             }
         }
     }
 
-    protected function label_fetch($tpl)
+    protected function label_fetch($tpl,$loadcache=1,$type='html')
     {
-        $this->load_page_cache($tpl);
+        if($loadcache==1){
+            $this->load_page_cache($tpl,$type);
+        }
 
         $html = $this->fetch($tpl);
         if($GLOBALS['config']['app']['compress'] == 1){
@@ -65,6 +73,8 @@ class All extends Controller
         $maccms['actor_extend_area'] = $GLOBALS['config']['app']['actor_extend_area'];
 
         $maccms['http_type'] = $GLOBALS['http_type'];
+        $maccms['http_url'] = $GLOBALS['http_type']. ''.$_SERVER['SERVER_NAME'].($_SERVER["SERVER_PORT"]==80 ? '' : ':'.$_SERVER["SERVER_PORT"]).$_SERVER["REQUEST_URI"];
+        $maccms['seo'] = $GLOBALS['config']['seo'];
 
         if(!empty($GLOBALS['mid'])) {
             $maccms['mid'] = $GLOBALS['mid'];
@@ -422,7 +432,7 @@ class All extends Controller
         }
         else {
             $this->assign('player_data', '<script type="text/javascript">var player_data=' . json_encode($player_info) . '</script>');
-            $this->assign('player_js', '<script type="text/javascript" src="' . MAC_PATH . 'static/js/playerconfig.js"></script><script type="text/javascript" src="' . MAC_PATH . 'static/js/player.js"></script>');
+            $this->assign('player_js', '<script type="text/javascript" src="' . MAC_PATH . 'static/js/playerconfig.js?t='.$this->_tsp.'"></script><script type="text/javascript" src="' . MAC_PATH . 'static/js/player.js?t='.$this->_tsp.'"></script>');
         }
         $this->label_comment();
         return $info;

@@ -460,10 +460,18 @@ class Collect extends Base {
                 $v['vod_class'] = mac_format_text($v['vod_class']);
                 $v['vod_tag'] = mac_format_text($v['vod_tag']);
 
+                $v['vod_plot_name'] = (string)$v['vod_plot_name'];
+                $v['vod_plot_detail'] = (string)$v['vod_plot_detail'];
+
+                if(!empty($v['vod_plot_name'])){
+                    $v['vod_plot_name'] = trim($v['vod_plot_name'],'$$$');
+                }
+                if(!empty($v['vod_plot_detail'])){
+                    $v['vod_plot_detail'] = trim($v['vod_plot_detail'],'$$$');
+                }
                 if(empty($v['vod_isend']) && !empty($v['vod_serial'])){
                     $v['vod_isend'] = 0;
                 }
-
                 if($config['hits_start']>0 && $config['hits_end']>0) {
                     $v['vod_hits'] = rand($config['hits_start'], $config['hits_end']);
                     $v['vod_hits_day'] = rand($config['hits_start'], $config['hits_end']);
@@ -545,14 +553,27 @@ class Collect extends Base {
                 $cj_down_url_arr = explode('$$$',$v['vod_down_url']);
                 $cj_down_server_arr = explode('$$$',$v['vod_down_server']);
                 $cj_down_note_arr = explode('$$$',$v['vod_down_note']);
+
+
+                $collect_filter=[];
                 foreach($cj_play_from_arr as $kk=>$vv){
                     if(empty($vv)){
                         unset($cj_play_from_arr[$kk]);
                         continue;
                     }
+
                     $cj_play_url_arr[$kk] = rtrim($cj_play_url_arr[$kk],'#');
                     $cj_play_server_arr[$kk] = $cj_play_server_arr[$kk];
                     $cj_play_note_arr[$kk] = $cj_play_note_arr[$kk];
+
+                    if($param['filter'] > 0){
+                        if(strpos(','.$param['filter_from'].',',$vv)!==false) {
+                            $collect_filter['play'][$param['filter']]['cj_play_from_arr'][$kk] = $vv;
+                            $collect_filter['play'][$param['filter']]['cj_play_url_arr'][$kk] = $cj_play_url_arr[$kk];
+                            $collect_filter['play'][$param['filter']]['cj_play_server_arr'][$kk] = $cj_play_server_arr[$kk];
+                            $collect_filter['play'][$param['filter']]['cj_play_note_arr'][$kk] = $cj_play_note_arr[$kk];
+                        }
+                    }
                 }
                 foreach($cj_down_from_arr as $kk=>$vv){
                     if(empty($vv)){
@@ -562,27 +583,24 @@ class Collect extends Base {
                     $cj_down_url_arr[$kk] = rtrim($cj_down_url_arr[$kk]);
                     $cj_down_server_arr[$kk] = $cj_down_server_arr[$kk];
                     $cj_down_note_arr[$kk] = $cj_down_note_arr[$kk];
+
+                    if($param['filter'] > 0){
+                        if(strpos(','.$param['filter_from'].',',$vv)!==false) {
+                            $collect_filter['down'][$param['filter']]['cj_down_from_arr'][$kk] = $vv;
+                            $collect_filter['down'][$param['filter']]['cj_down_url_arr'][$kk] = $cj_down_url_arr[$kk];
+                            $collect_filter['down'][$param['filter']]['cj_down_server_arr'][$kk] = $cj_down_server_arr[$kk];
+                            $collect_filter['down'][$param['filter']]['cj_down_note_arr'][$kk] = $cj_down_note_arr[$kk];
+                        }
+                    }
                 }
-                $v['vod_play_from'] = join('$$$',$cj_play_from_arr);
-                $v['vod_play_url'] = join('$$$',$cj_play_url_arr);
-                $v['vod_play_server'] = join('$$$',$cj_play_server_arr);
-                $v['vod_play_note'] = join('$$$',$cj_play_note_arr);
-                $v['vod_down_from'] = join('$$$',$cj_down_from_arr);
-                $v['vod_down_url'] = join('$$$',$cj_down_url_arr);
-                $v['vod_down_server'] = join('$$$',$cj_down_server_arr);
-                $v['vod_down_note'] = join('$$$',$cj_down_note_arr);
-
-                if(empty($v['vod_play_from'])) $v['vod_play_from']='';
-                if(empty($v['vod_play_url'])) $v['vod_play_url']='';
-                if(empty($v['vod_play_server'])) $v['vod_play_server']='';
-                if(empty($v['vod_play_note'])) $v['vod_play_note']='';
-
-                if(empty($v['vod_down_from'])) $v['vod_down_from']='';
-                if(empty($v['vod_down_url'])) $v['vod_down_url']='';
-                if(empty($v['vod_down_server'])) $v['vod_down_server']='';
-                if(empty($v['vod_down_note'])) $v['vod_down_note']='';
-
-
+                $v['vod_play_from'] = (string)join('$$$',$cj_play_from_arr);
+                $v['vod_play_url'] = (string)join('$$$',$cj_play_url_arr);
+                $v['vod_play_server'] = (string)join('$$$',$cj_play_server_arr);
+                $v['vod_play_note'] = (string)join('$$$',$cj_play_note_arr);
+                $v['vod_down_from'] = (string)join('$$$',$cj_down_from_arr);
+                $v['vod_down_url'] = (string)join('$$$',$cj_down_url_arr);
+                $v['vod_down_server'] = (string)join('$$$',$cj_down_server_arr);
+                $v['vod_down_note'] = (string)join('$$$',$cj_down_note_arr);
 
                 if($blend===false){
                     $info = model('Vod')->where($where)->find();
@@ -596,16 +614,34 @@ class Collect extends Base {
                         ->find();
                 }
 
-                if (!$info) {
-                    $tmp = $this->syncImages($config['pic'],$v['vod_pic'],'vod');
-                    $v['vod_pic'] = (string)$tmp['pic'];
-                    $msg = $tmp['msg'];
-                    $res = model('Vod')->insert($v);
-                    if($res===false){
 
+                if (!$info) {
+
+                    if($param['opt'] == 2){
+                        $des= '数据操作没有勾选新增，跳过。';
                     }
-                    $color ='green';
-                    $des= '新加入库，成功ok。';
+                    else {
+                        if ($param['filter'] == 1 || $param['filter'] == 2) {
+                            $v['vod_play_from'] = (string)join('$$$', $collect_filter['play'][$param['filter']]['cj_play_from_arr']);
+                            $v['vod_play_url'] = (string)join('$$$', $collect_filter['play'][$param['filter']]['cj_play_url_arr']);
+                            $v['vod_play_server'] = (string)join('$$$', $collect_filter['play'][$param['filter']]['cj_play_server_arr']);
+                            $v['vod_play_note'] = (string)join('$$$', $collect_filter['play'][$param['filter']]['cj_play_note_arr']);
+                            $v['vod_down_from'] = (string)join('$$$', $collect_filter['down'][$param['filter']]['cj_down_from_arr']);
+                            $v['vod_down_url'] = (string)join('$$$', $collect_filter['down'][$param['filter']]['cj_down_url_arr']);
+                            $v['vod_down_server'] = (string)join('$$$', $collect_filter['down'][$param['filter']]['cj_down_server_arr']);
+                            $v['vod_down_note'] = (string)join('$$$', $collect_filter['down'][$param['filter']]['cj_down_note_arr']);
+                        }
+
+                        $tmp = $this->syncImages($config['pic'], $v['vod_pic'], 'vod');
+                        $v['vod_pic'] = (string)$tmp['pic'];
+                        $msg = $tmp['msg'];
+                        $res = model('Vod')->insert($v);
+                        if ($res === false) {
+
+                        }
+                        $color = 'green';
+                        $des = '新加入库，成功ok。';
+                    }
                 } else {
                     if(empty($config['uprule'])){
                         $des = '没有设置任何二次更新项目，跳过。';
@@ -613,11 +649,25 @@ class Collect extends Base {
                     elseif ($info['vod_lock'] == 1) {
                         $des = '数据已经锁定，跳过。';
                     }
+                    elseif($param['opt'] == 1){
+                        $des= '数据操作没有勾选更新，跳过。';
+                    }
                     else {
                         unset($v['vod_time_add']);
 
                         $update = [];
                         $ec=false;
+
+                        if($param['filter'] ==1 || $param['filter']==3){
+                            $cj_play_from_arr = $collect_filter['play'][$param['filter']]['cj_play_from_arr'];
+                            $cj_play_url_arr = $collect_filter['play'][$param['filter']]['cj_play_url_arr'];
+                            $cj_play_server_arr = $collect_filter['play'][$param['filter']]['cj_play_server_arr'];
+                            $cj_play_note_arr = $collect_filter['play'][$param['filter']]['cj_play_note_arr'];
+                            $cj_down_from_arr = $collect_filter['down'][$param['filter']]['cj_down_from_arr'];
+                            $cj_down_url_arr = $collect_filter['down'][$param['filter']]['cj_down_url_arr'];
+                            $cj_down_server_arr = $collect_filter['down'][$param['filter']]['cj_down_server_arr'];
+                            $cj_down_note_arr = $collect_filter['down'][$param['filter']]['cj_down_note_arr'];
+                        }
 
                         if (strpos(',' . $config['uprule'], 'a')!==false && !empty($v['vod_play_from'])) {
                             $old_play_from = $info['vod_play_from'];
@@ -656,6 +706,14 @@ class Collect extends Base {
                                     } else {
                                         $color = 'green';
                                         $des .= '播放组(' . $cj_play_from . ')，更新ok。';
+                                        if ($config['urlrole'] == 1) {
+                                            $tmp1 = explode('#',$arr1[$play_key]);
+                                            $tmp2 = explode('#',$cj_play_url);
+                                            $tmp1 = array_merge($tmp1,$tmp2);
+                                            $tmp1 = array_unique($tmp1);
+                                            $cj_play_url = join('#',$tmp1);
+                                            unset($tmp1,$tmp2);
+                                        }
                                         $arr1[$play_key] = $cj_play_url;
                                         $ec=true;
                                     }
@@ -789,7 +847,11 @@ class Collect extends Base {
                         if (strpos(',' . $config['uprule'], 'v')!==false && !empty($v['vod_isend']) && $v['vod_isend']!=$info['vod_isend']) {
                             $update['vod_isend'] = $v['vod_isend'];
                         }
-
+                        if (strpos(',' . $config['uprule'], 'w')!==false && !empty($v['vod_plot_name']) && $v['vod_plot_name']!=$info['vod_plot_name']) {
+                            $update['vod_plot'] = 1;
+                            $update['vod_plot_name'] = $v['vod_plot_name'];
+                            $update['vod_plot_detail'] = $v['vod_plot_detail'];
+                        }
 
                         if(count($update)>0){
                             $update['vod_time'] = time();
@@ -1207,7 +1269,8 @@ class Collect extends Base {
         else{
             $url .='&';
         }
-        $html = mac_curl_get($url) . base64_decode($param['param']);
+        $url .= http_build_query($url_param).base64_decode($param['param']);
+        $html = mac_curl_get($url);
         if(empty($html)){
             return ['code'=>1001, 'msg'=>'连接API资源库失败，通常为服务器网络不稳定或禁用了采集'];
         }
@@ -1465,7 +1528,8 @@ class Collect extends Base {
         else{
             $url .='&';
         }
-        $html = mac_curl_get($url) . base64_decode($param['param']);
+        $url .= http_build_query($url_param).base64_decode($param['param']);
+        $html = mac_curl_get($url);
         if(empty($html)){
             return ['code'=>1001, 'msg'=>'连接API资源库失败，通常为服务器网络不稳定或禁用了采集'];
         }
